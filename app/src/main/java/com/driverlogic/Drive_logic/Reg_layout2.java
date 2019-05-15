@@ -2,6 +2,7 @@ package com.driverlogic.Drive_logic;
 
 import android.app.Fragment;
 
+import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -14,6 +15,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -33,10 +35,12 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.PhoneAuthCredential;
 import com.google.firebase.auth.PhoneAuthProvider;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.squareup.picasso.Picasso;
 
 
-import org.apache.commons.io.FileUtils;
+
 
 import java.net.URISyntaxException;
 import java.util.concurrent.TimeUnit;
@@ -52,13 +56,16 @@ public class Reg_layout2 extends Fragment {
     TextView tt1,tt2;
     ImageView v1,v2;
     SharedPreferences sPref;
-    Button b1,b2,b3;
-    EditText t1,t2;
+    Button b1,b2,b3,b4;
+    EditText t1,t2,t3,t4;
     private FirebaseAuth mAuth;
     private String mVerificationId;
     String code="";
+    boolean code_equals=false;
+    private DatabaseReference myRootRef;
     private PhoneAuthProvider.ForceResendingToken mResendToken;
-
+    FragmentTransaction fTrans;
+    MenuItem item;
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_reg_layout2, null);
@@ -71,8 +78,9 @@ public class Reg_layout2 extends Fragment {
         name = sPref.getString("name", "");
         pic=sPref.getString("icons", "");
         email=sPref.getString("email", "");
+        id=sPref.getString("id", "");
         v1=v.findViewById(R.id.img_frag2);
-        v2=v.findViewById(R.id.img_foto);
+       // v2=v.findViewById(R.id.img_foto);
         tt1=v.findViewById(R.id.frag2_name);
         tt1.setText(name);
         tt2=v.findViewById(R.id.frag2_email);
@@ -84,12 +92,16 @@ public class Reg_layout2 extends Fragment {
                 .into(v1);
         b1 =v.findViewById(R.id.frag2_get_reg_num_code);
         b2 =v.findViewById(R.id.frag2_set_reg_num_code);
-        b3=v.findViewById(R.id.frag2_foto);
+
+       // b3=v.findViewById(R.id.frag2_foto);
+        b4=v.findViewById(R.id.frag2_get_reg_send);
         t1=v.findViewById(R.id.frag2_set_reg_num_code_input);
         t2=v.findViewById(R.id.frag2_set_reg_num_code_input);
+        t3=v.findViewById(R.id.frag2_city);
+        t4=v.findViewById(R.id.frag2_number);
         b1.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                LoginManager.getInstance().logOut();
+
                 sendVerificationCode(t1.getText().toString());
             }
         });
@@ -97,12 +109,28 @@ public class Reg_layout2 extends Fragment {
             public void onClick(View v) {
                 if(code.equals(t2.getText().toString())){
                     Log.e("True","True");
+                    code_equals=true;
                 }
             }
         });
-        b3.setOnClickListener(new View.OnClickListener() {
+       /* b3.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 showFileChooser();
+            }
+        });*/
+         myRootRef = FirebaseDatabase.getInstance().getReferenceFromUrl("https://worker-1990.firebaseio.com/");
+
+        b4.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                if(code_equals==true) {
+                    writeNewUser(id, name, t3.getText().toString(), t4.getText().toString());
+                    Reg_layout1 frag1 = new Reg_layout1();
+                    Intent intent = new Intent(getActivity(), Main2Activity.class);
+                    startActivity(intent);
+
+                }else{
+                    Toast.makeText(getActivity(), "Телефон не проверен",Toast.LENGTH_SHORT).show();
+                }
             }
         });
         return v;
@@ -153,7 +181,7 @@ public class Reg_layout2 extends Fragment {
 
         }
     };
-    private void showFileChooser() {
+   /* private void showFileChooser() {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("image/*");
         intent.addCategory(Intent.CATEGORY_OPENABLE);
@@ -204,7 +232,12 @@ public class Reg_layout2 extends Fragment {
         else if ("file".equalsIgnoreCase(uri.getScheme())) {
             return uri.getPath();
         }
-
+*
         return null;
-    }
+    }*/
+   private void writeNewUser(String id, String name, String location,String number) {
+       Reg_User user = new Reg_User(id, name,location,number,"0");
+
+       myRootRef.child("users").child(id).setValue(user);
+   }
 }

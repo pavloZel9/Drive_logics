@@ -15,7 +15,8 @@
 
     </group>
 
-    <item android:title="Получить доступ">
+    <item android:title="Получить доступ"
+        android:id="@+id/get_share">
         <menu>
             <item
                 android:id="@+id/nav_share"

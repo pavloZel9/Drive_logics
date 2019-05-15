@@ -25,6 +25,12 @@ import android.widget.Toast;
 import com.facebook.AccessToken;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONException;
@@ -34,18 +40,62 @@ public class Main2Activity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
     SharedPreferences sPref;
     String id,name,email,pic;
+    String open_add_win="0";
     AccessToken mAccessToken;
     ImageView icon_myinfo;
+    FragmentTransaction fTrans,fTrans3;
+    Reg_layout3 frag3;
+    private DatabaseReference myRootRef;
 
-
-    FragmentTransaction fTrans;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mAccessToken = AccessToken.getCurrentAccessToken();
         getUserProfile(mAccessToken);
         setContentView(R.layout.activity_main2);
+        myRootRef = FirebaseDatabase.getInstance().getReferenceFromUrl("https://worker-1990.firebaseio.com/");
         Toolbar toolbar = findViewById(R.id.toolbar);
+
+
+
+
+        DatabaseReference ref1 = myRootRef.child("users").child("2342123355835453");
+        ref1.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Reg_User user = dataSnapshot.getValue(Reg_User.class);
+                // ...
+                try {
+                    Log.e("YES1", user.getHave());
+                    open_add_win=user.getHave();
+                }catch(Exception e) {
+                    open_add_win="0";
+                }
+                Log.e("open_add_win", open_add_win);
+                if(open_add_win.equals("0")) {
+                    Reg_layout1 frag1 = new Reg_layout1();
+                    fTrans = getFragmentManager().beginTransaction();
+                    fTrans.add(R.id.frgmCont, frag1);
+                    fTrans.commit();
+
+                }
+                if(open_add_win.equals("1")) {
+                    frag3=new Reg_layout3();
+                    fTrans = getFragmentManager().beginTransaction();
+                    fTrans.add(R.id.frgmCont,frag3);
+                    fTrans.commit();
+
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                // Failed to read value
+            }
+        });
+
+
+
         setSupportActionBar(toolbar);
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -55,10 +105,9 @@ public class Main2Activity extends AppCompatActivity
                         .setAction("Action", null).show();
             }
         });
-        Reg_layout1 frag1=new Reg_layout1();
-        fTrans = getFragmentManager().beginTransaction();
-        fTrans.add(R.id.frgmCont, frag1);
-        fTrans.commit();
+
+
+
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         NavigationView navigationView = findViewById(R.id.nav_view);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -121,11 +170,15 @@ public class Main2Activity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.nav_home) {
+            List_jobs frag7=new List_jobs();
+            FragmentTransaction fTrans13 = getFragmentManager().beginTransaction();
+            fTrans13.replace(R.id.frgmCont, frag7);
+            fTrans13.commit();
+        } else if (id == R.id.nav_gallery) {
             Reg_layout1 frag2=new Reg_layout1();
             FragmentTransaction fTrans1 = getFragmentManager().beginTransaction();
             fTrans1.replace(R.id.frgmCont, frag2);
             fTrans1.commit();
-        } else if (id == R.id.nav_gallery) {
 
         }  else if (id == R.id.nav_share) {
 
@@ -175,6 +228,7 @@ public class Main2Activity extends AppCompatActivity
         ed.putString("icons", pic);
         ed.putString("name", name);
         ed.putString("email", email);
+        ed.putString("id", id);
 
         ed.commit();
         Toast.makeText(this, "Text saved", Toast.LENGTH_SHORT).show();
